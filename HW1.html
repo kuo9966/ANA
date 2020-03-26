@@ -1,0 +1,154 @@
+<html>
+    <head>
+        <style>
+        #info {
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            color: #ffff00
+          }
+          
+          body {
+            overflow: hidden;
+          }
+          </style>
+    </head>
+
+    <body>
+        <div id="info">I3A50
+            <br>Homework 1
+            </div>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/104/three.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+            <script>
+                var renderer, scene, camera;
+                var points = [];
+
+                var count = 0;
+
+                var a = [];
+                var b = [];
+                var c = [];
+
+                init();
+                animate();
+
+                function init() {
+                    
+                    renderer = new THREE.WebGLRenderer();
+                    document.body.appendChild (renderer.domElement);
+                    renderer.setSize (window.innerWidth, window.innerHeight);
+                    renderer.setClearColor (0x888888);
+                    
+                    scene = new THREE.Scene();
+                    grid = new THREE.GridHelper(200,20,'red','white');
+                    grid.rotation.x = Math.PI/2;
+                    scene.add (grid);
+                    
+                    camera = new THREE.OrthographicCamera (-100,100,100,-100, -10,10);
+                    ///////////////////////////////////
+                    var circle = drawCircle (46);
+                    scene.add (circle);
+                    circle.position.set (15, -15, 0);
+                    
+                    document.addEventListener ('mousedown', doMouseDown, false);
+                }
+
+                function doMouseDown(event) {
+
+                event.preventDefault();
+                let mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                let mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+                // [mouseX, mouseY] in [-1,1]x[-1,1]
+                var dot = new THREE.Mesh (new THREE.CircleGeometry(2,20), new THREE.MeshBasicMaterial({color:'cyan'}));
+                scene.add (dot);
+                dot.position.set (mouseX*100, mouseY*100, 0);
+                
+                var point = new THREE.Vector3 (mouseX*100, mouseY*100, 0);
+                points.push (point);
+                
+                console.log (points.length + ' points added');
+                if (points.length == 2) {
+                    var line = drawLine (points[0], points[1]);
+                    scene.add (line);
+                    points = [];
+                }
+                    
+                }
+
+                function drawLine (vec1, vec2) {
+                    var abc = findABC (vec1.x, vec1.y, vec2.x, vec2.y);
+                    a.push(abc[0]);
+                b.push(abc[1]);
+                c.push(abc[2]);
+                var vv1;
+                var vv2;
+                if(a[count]==0){
+                        vv1 = new THREE.Vector3(100, (-a[count]*100-c[count])/b[count], 0); 
+                    vv2 = new THREE.Vector3(-100,(-a[count]*100-c[count])/b[count], 0);
+                }
+                else{
+                    vv1 = new THREE.Vector3((-100*b[count]-c[count])/a[count], 100,0);
+                    vv2 = new THREE.Vector3(( 100*b[count]-c[count])/a[count], -100,0);
+                }
+                if(count % 2 == 1){
+                
+                var PT = Point(a[count-1], a[count], b[count-1], b[count], c[count-1], c[count]);
+                var dotPT = new THREE.Mesh (new THREE.CircleGeometry(2,20), new THREE.MeshBasicMaterial({color:'white'}));
+                scene.add (dotPT);
+                dotPT.position.set (PT[0], PT[1], 0);
+                }
+                count++;
+                
+                    let geometry = new THREE.Geometry();
+                geometry.vertices.push (vv1, vv2);
+                
+                let line = new THREE.Line (geometry, new THREE.LineBasicMaterial({color:'purple'}));
+                return line;
+                }
+
+                function findABC (p1,q1, p2,q2) {
+                    var a, b, c;
+
+                // from maxima:
+                //(p1-p2)*y+(q2-q1)*x-p1*q2+p2*q1
+
+                    a = q2-q1;	
+                    b = p1-p2;
+                    c = -p1*q2+p2*q1;
+                    return [a, b, c]; // ax+by+c = 0
+                }
+                function drawCircle(r) {
+                let geometry = new THREE.Geometry();
+                const SEGS = 100;
+                let theta = 0;
+                let dtheta = Math.PI*2/SEGS;
+                for (var i = 0; i <= SEGS; i++, theta += dtheta) {
+                    geometry.vertices.push (new THREE.Vector3 (r*Math.cos(theta), r*Math.sin(theta), 0));
+                }
+                let line = new THREE.Line (geometry, new THREE.LineBasicMaterial({color:'yellow'}));
+                return line;
+                }
+
+                function animate() {
+                    requestAnimationFrame (animate);
+                    renderer.render(scene, camera)
+                }
+
+                function Point(a1, a2, b1, b2, c1, c2){
+                        var x, y;
+                    
+                    x = (b2 * c1 - b1 * c2) / (a2 * b1 - a1 * b2);
+                    
+                    y = -(a2 * c1 - a1 * c2) / (a2 * b1 - a1 * b2);
+                    
+                    return [x,y];
+                }
+
+
+            </script>
+    </body>
+</html>
